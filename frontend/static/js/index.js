@@ -1,3 +1,16 @@
+import Dashboard from "./views/Dashboard.js";
+import Posts from "./views/Posts.js";
+import Settings from "./views/Settings.js";
+
+
+//This function will update the contents inside the page without refreshing it
+const navigateTo = url => {
+    history.pushState(null, null, url);
+    //router method will process the new history entry
+    router();
+};
+
+
 /*
 CLIENT-SIDE ROUTER
 
@@ -7,15 +20,15 @@ IT'LL LOAD THE CONTENTS OF DASHBOARD, POSTS, OR SETTINGS, INSIDE THIS METHOD
 const router = async () => {
     const routes = [
         
-        //THE ROUTE PATH OF THE WEB PAGE
+        //THE ROUTE/PATH OF THE WEB PAGE
         {
-            path: "/", view: () => console.log("Viewing Dashboard")
+            path: "/", view: Dashboard
         },
         {
-            path: "/posts", view: () => console.log("Viewing Posts")
+            path: "/posts", view: Posts
         },
         {
-            path: "/settings", view: () => console.log("Viewing Settings")
+            path: "/settings", view: Settings
         },
         
     ];
@@ -28,16 +41,38 @@ const router = async () => {
             return {
                 route: route,
                 isMatch: location.pathname === route.path
-            }
+            };
         }
     );
     
     //This is going to find the true object (the current path)
-    let match = potentialMatches.findIndex(potentialMatch => potentialMatch.isMatch);
+    let match = potentialMatches.find(potentialMatch => potentialMatch.isMatch);
 
-    console.log(potentialMatches);
-}
+    if(!match){
+        match = {
+            route: routes[0],
+            isMatch: true
+        };
+    }
+
+    const view = new match.route.view();
+
+    document.querySelector("#app").innerHTML = await view.getHtml();
+
+    console.log(match.route.view());
+};
+
+window.addEventListener("popstate", router);
 
 document.addEventListener("DOMContentLoaded", () => {
+    document.body.addEventListener("click", event => {
+        if(event.target.matches("[data-link]")){
+            //prevent to refresh the page and running navigateTo() function after
+            event.preventDefault();
+            //get the atribute href from the target (link)
+            navigateTo(event.target.href);
+        }
+    });
+
     router();
-})
+});
